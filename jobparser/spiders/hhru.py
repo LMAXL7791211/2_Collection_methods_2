@@ -15,13 +15,29 @@ class HhruSpider(scrapy.Spider):
         vacancy = response.css(
             'div.vacancy-serp div.vacancy-serp-item div.vacancy-serp-item__row_header a.bloko-link::attr(href)').extract()
         for link in vacancy:
-            yield response.follow(link,self.vacancy_parse(link))
+            yield response.follow(link, self.vacancy_parse)#,
+                                  # cb_kwargs={'link':link}
+                                  # )
 
-    def vacancy_parse (self, response: HtmlResponse, link):
+    def vacancy_parse (self, response: HtmlResponse):#, link):
         name = response.css('div.vacancy-title h1.header::text').extract_first()
-        salary = response.css('div.vacancy-title p.vacancy-salary::text').extract_first()
-        # link = response.css('head link.rel.canonical::attr(href)').extract_first()
+#        salary = response.css('div.vacancy-title p.vacancy-salary::text').extract_first()
+        salary_currency = response.xpath(
+            "//div[contains(@class,'vacancy-title')]//meta[contains(@itemprop, 'currency')]/@content").get()
+        salaryfrom = response.xpath(
+            "//div[contains(@class,'vacancy-title')]//meta[contains(@itemprop, 'minValue')]/@content").get()
+        salaryto = response.xpath(
+            "//div[contains(@class,'vacancy-title')]//meta[contains(@itemprop, 'maxValue')]/@content").get()
+
+        link = response.url
         source = 'www.hh.ru'
 
         #print(f'{name} {salary}')
-        yield JobparserItem(name=name, salary=salary, link=link, source=source)
+        yield JobparserItem(name=name,
+                            # salary=salary,
+                            link=link,
+                            source=source,
+                            salary_currency=salary_currency,
+                            salaryfrom=salaryfrom,
+                            salaryto=salaryto
+                            )

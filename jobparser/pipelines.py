@@ -16,6 +16,22 @@ class JobparserPipeline(object):
 
     def process_item(self, item, spider):
         collection = self.mongo_base[spider.name + '123']
+        kursdict = {'RUR': 1, 'USD': 65, 'EUR': 75}
+        if item['salary_currency']:
+            kurs = kursdict[item['salary_currency']]
+        else:
+            kurs = 1  # RUR by default
+            item['salary_currency'] = 'не указана'
+        if item['salaryfrom']:
+            item['salaryfrom'] = int(item['salaryfrom']) * kurs
+        else:
+            item['salaryfrom'] = 'не указана'
+        if item['salaryto']:
+            item['salaryto'] = int(item['salaryto']) * kurs
+        else:
+            item['salaryto'] = 'не указана'
+
         print(item)
+        # print(f'kurs = {kurs}')
         collection.insert_one(item)
         return item
